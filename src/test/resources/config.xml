@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<controllers>
+
+	<!-- A -->
+	<config-property name="A" value="B" />
+
+	<domain id="xxx" base="http://www.baidu.com" />
+	<domain id="xxx" base="http://www.baidu.com" />
+
+	<plugin resource="xxx.xml" />
+
+	<!-- B -->
+	<bean id="" class="" />
+
+	<before call="a.b" order="0">
+		<include>/product/queryBenchListByProductId</include>
+		<include>/product/queryBenchListByProductId</include>
+		<include>/product/queryBenchListByProductId</include>
+		<exclude></exclude>
+	</before>
+
+	<after call="c.d" order="0">
+		<include></include>
+		<exclue></exclue>
+	</after>
+
+	<c url="/product/queryBenchListByProductId" transfer="http://xxxxxxxxxx/xxxx"
+		validate="@" exec="org.xson.web.MyController1.m0" />
+	<c url="/product/queryBenchListByProductId1" transfer="@xxx/@0/@1"
+		validate="@" exec="org.xson.web.MyController1.m0" before="org.xson.web.MyController1.m1"
+		after="org.xson.web.MyController1.m2" view="///" forward="true" />
+
+	<c url="/product/queryBenchListByProductId1" transfer="{xxx}/{0}/{1}"
+		validate="@" exec="@xxx.m0" view="///" forward="true">
+		<before call="@xxx.b" order="0" />
+		<after call="@xxx.b" order="0" />
+	</c>
+
+
+</controllers>
