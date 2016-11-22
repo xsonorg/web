@@ -3,7 +3,6 @@ package org.xson.web;
 import java.io.IOException;
 
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +18,7 @@ import org.xson.web.RequestContext.RequestTypeEnum;
 import org.xson.web.handler.DefaultJSONResponseHandler;
 import org.xson.web.handler.DefaultXCOResponseHandler;
 import org.xson.web.util.ServletUtils;
+import org.xson.web.xml.ControllerVo;
 
 public class XCOServlet extends HttpServlet {
 
@@ -26,26 +26,8 @@ public class XCOServlet extends HttpServlet {
 
 	private static Logger		log					= Logger.getLogger(XCOServlet.class);
 
-	private boolean				existValidate		= false;
-
 	private ResponseHandler		xcoResponseHandler	= new DefaultXCOResponseHandler();
 	private ResponseHandler		jsonResponseHandler	= new DefaultJSONResponseHandler();
-
-	@Override
-	public void init(ServletConfig config) throws ServletException {
-		try {
-			// load controller config
-			String webFrameworkResource = config.getInitParameter("web-framework.resource");
-			org.xson.web.Container.getInstance().init(webFrameworkResource);
-			// load validate
-			String dateValidateResource = config.getInitParameter("date-validate.resource");
-			if (null != dateValidateResource) {
-				org.xson.common.validate.Container.init(dateValidateResource);
-			}
-		} catch (Exception e) {
-			log.error("web framework failed to initialize", e);
-		}
-	}
 
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -61,11 +43,13 @@ public class XCOServlet extends HttpServlet {
 
 		RequestContext context = pretreatmentContext(req, resp, requestType);
 
-		ControllerVo cVo = Container.getInstance().getControllerVo(context.getUrl());
+		Container container = Container.getInstance();
+
+		ControllerVo cVo = container.getControllerVo(context.getUrl());
 
 		if (null == cVo) {
 			log.error("It does not match the URL: " + context.getUrl());
-			context.setErrorInfo(Container.getInstance().getErrorCode(), Container.getInstance().getErrorMessage());
+			context.setErrorInfo(container.getErrorCode(), container.getErrorMessage());
 			doResponseError(context, null);
 			return;
 		}
@@ -82,17 +66,26 @@ public class XCOServlet extends HttpServlet {
 				}
 			}
 		} catch (Exception e) {
-			context.setErrorInfo(Container.getInstance().getErrorCodeDataConversion(), Container.getInstance().getErrorMessageDataConversion());
+			context.setErrorInfo(container.getErrorCodeDataConversion(), container.getErrorMessageDataConversion());
+			doResponseError(context, e);
+			return;
+		}
+
+		// assembly
+		try {
+			cVo.assembly(context);
+		} catch (Throwable e) {
+			context.setErrorInfo(container.getErrorCodeDataConversion(), container.getErrorMessageDataConversion());
 			doResponseError(context, e);
 			return;
 		}
 
 		// validate
-		if (existValidate && null != validateId) {
+		if (container.isIntegratedValidationFramework() && null != validateId) {
 			try {
 				boolean checkResult = XCOValidate.validate(validateId, (XCO) context.getArg());
 				if (!checkResult) {
-					context.setErrorInfo(Container.getInstance().getErrorCodeDataValidate(), Container.getInstance().getErrorMessageDataValidate());
+					context.setErrorInfo(container.getErrorCodeDataValidate(), container.getErrorMessageDataValidate());
 					doResponseError(context, null);
 				}
 			} catch (Exception e) {
@@ -100,7 +93,7 @@ public class XCOServlet extends HttpServlet {
 					XCOValidateException xcoEx = (XCOValidateException) e;
 					context.setErrorInfo(xcoEx.getErrorCode(), xcoEx.getErrorMessage());
 				} else {
-					context.setErrorInfo(Container.getInstance().getErrorCodeDataValidate(), Container.getInstance().getErrorMessageDataValidate());
+					context.setErrorInfo(container.getErrorCodeDataValidate(), container.getErrorMessageDataValidate());
 				}
 
 				doResponseError(context, e);
@@ -114,9 +107,13 @@ public class XCOServlet extends HttpServlet {
 	private void exec(RequestContext context, ControllerVo cVo) {
 		Throwable ex = null;
 		try {
-			cVo.before(context);
-			cVo.exec(context);
-			cVo.after(context);
+			boolean cache = cVo.cacheGet(context);
+			if (!cache) {
+				cVo.before(context);
+				cVo.exec(context);
+				cVo.after(context);
+				cVo.cachePut(context);
+			}
 		} catch (Throwable e) {
 			ex = e;
 		} finally {
@@ -134,7 +131,7 @@ public class XCOServlet extends HttpServlet {
 	 */
 	private RequestContext pretreatmentContext(HttpServletRequest req, HttpServletResponse resp, RequestTypeEnum requestType) {
 		RequestContext context = Container.getInstance().requestContextThreadLocal.get();
-		if (null != context) {
+		if (null == context) { // fix bug
 			context = new RequestContext(req, resp, false);
 			context.setRequestType(requestType);
 		}
@@ -178,13 +175,13 @@ public class XCOServlet extends HttpServlet {
 				String view = context.getView();
 				if (null != view) {
 					if (context.isForward()) {
-						RequestDispatcher dispatcher = request.getRequestDispatcher(context.getView());
+						RequestDispatcher dispatcher = request.getRequestDispatcher(view);
 						dispatcher.forward(request, response);
 					} else {
 						response.sendRedirect(context.getView());
 					}
 				} else {
-					response.sendRedirect(Container.getInstance().getErrorRedirectPage());
+					// response.sendRedirect(Container.getInstance().getErrorRedirectPage());
 				}
 			}
 		} catch (Exception e) {

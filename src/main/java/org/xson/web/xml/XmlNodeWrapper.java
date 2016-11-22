@@ -1,4 +1,4 @@
-package org.xson.web.util;
+package org.xson.web.xml;
 
 import java.util.List;
 import java.util.Properties;

@@ -1,4 +1,4 @@
-package org.xson.web.util;
+package org.xson.web.xml;
 
 import java.io.InputStream;
 import java.util.ArrayList;

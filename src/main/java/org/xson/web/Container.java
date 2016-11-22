@@ -5,7 +5,11 @@ import java.io.InputStream;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.xson.web.util.XMLConfigBuilder;
+import org.xson.web.async.AsyncTask;
+import org.xson.web.async.AsyncTaskThread;
+import org.xson.web.cache.vo.CacheVo;
+import org.xson.web.xml.ControllerVo;
+import org.xson.web.xml.XMLConfigBuilder;
 
 public class Container {
 
@@ -20,17 +24,28 @@ public class Container {
 		return instance;
 	}
 
-	public ThreadLocal<RequestContext>	requestContextThreadLocal	= new ThreadLocal<RequestContext>();
-	protected Map<String, ControllerVo>	controllerMap;
+	public ThreadLocal<RequestContext>	requestContextThreadLocal		= new ThreadLocal<RequestContext>();
+	protected Map<String, ControllerVo>	controllerMap					= null;
 
-	private int							errorCode					= -1;
-	private String						errorMessage				= "系统错误";
-	private int							errorCodeDataConversion		= -2;
-	private String						errorMessageDataConversion	= "数据转换错误";
-	private int							errorCodeDataValidate		= -3;
-	private String						errorMessageDataValidate	= "数据验证错误";
-	private String						errorRedirectPage			= "/404.html";
-	private int							order						= 10;
+	private int							errorCode						= -1;
+	private String						errorMessage					= "系统错误";
+	private int							errorCodeDataConversion			= -2;
+	private String						errorMessageDataConversion		= "数据转换错误";
+	private int							errorCodeDataValidate			= -3;
+	private String						errorMessageDataValidate		= "数据验证错误";
+	private String						errorRedirectPage				= "/404.html";
+	private int							order							= 10;
+
+	// 是否集成验证框架
+	private boolean						integratedValidationFramework	= false;
+
+	// 异步线程
+	private AsyncTaskThread				asyncTaskThread					= null;
+
+	// 缓存容器集合
+	private Map<String, CacheVo>		cacheVoMap						= null;
+
+	private boolean						initialization					= false;
 
 	public void setControllerMap(Map<String, ControllerVo> controllerMap) {
 		if (null == this.controllerMap) {
@@ -57,12 +72,32 @@ public class Container {
 	}
 
 	public void init(String resource) throws Exception {
-		logger.info("Start parsing: " + resource);
-		InputStream inputStream = getResourceAsStream(null, resource);
-		XMLConfigBuilder builder = new XMLConfigBuilder(inputStream);
-		builder.parseNode();
-		// initialization = true;
-		logger.info("web framework init success...");
+		if (!initialization) {
+			logger.info("Start parsing: " + resource);
+			InputStream inputStream = getResourceAsStream(null, resource);
+			XMLConfigBuilder builder = new XMLConfigBuilder(inputStream);
+			builder.parseNode();
+
+			asyncTaskThread = new AsyncTaskThread();
+			asyncTaskThread.start();
+
+			initialization = true;
+			logger.info("web framework init success...");
+		}
+	}
+
+	public void stop() throws Throwable {
+		if (initialization) {
+			asyncTaskThread.stop();
+
+			// if (null != cacheVoMap) {}
+			for (Map.Entry<String, CacheVo> entry : cacheVoMap.entrySet()) {
+				entry.getValue().getCache().stop();
+				logger.info("cache close: " + entry.getValue().getId());
+			}
+
+			logger.info("web framework stop...");
+		}
 	}
 
 	public void config(Map<String, String> properties) {
@@ -133,4 +168,27 @@ public class Container {
 	public int getOrder() {
 		return order;
 	}
+
+	public boolean isIntegratedValidationFramework() {
+		return integratedValidationFramework;
+	}
+
+	public void setIntegratedValidationFramework(boolean integratedValidationFramework) {
+		this.integratedValidationFramework = integratedValidationFramework;
+	}
+
+	public void addAsyncTask(AsyncTask task) {
+		asyncTaskThread.addTask(task);
+	}
+
+	public Map<String, CacheVo> getCacheVoMap() {
+		return cacheVoMap;
+	}
+
+	public void setCacheVoMap(Map<String, CacheVo> cacheVoMap) {
+		if (null == this.cacheVoMap) {
+			this.cacheVoMap = cacheVoMap;
+		}
+	}
+
 }

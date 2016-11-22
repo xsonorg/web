@@ -1,9 +1,11 @@
-package org.xson.web;
+package org.xson.web.xml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.xson.web.cache.vo.CacheVo;
 
 /**
  * 解析过程中的上下文
@@ -18,11 +20,16 @@ public class BuilderContext {
 
 	private Map<String, MethodObject>	moMap			= new HashMap<String, MethodObject>();
 
-	private List<BeforeAfterVo>			beforeList		= new ArrayList<BeforeAfterVo>();
-	private List<BeforeAfterVo>			afterList		= new ArrayList<BeforeAfterVo>();
+	private List<InterceptVo>			beforeList		= new ArrayList<InterceptVo>();
+	private List<InterceptVo>			afterList		= new ArrayList<InterceptVo>();
+	private List<InterceptVo>			assemblyList	= new ArrayList<InterceptVo>();
 
 	private Map<String, String>			beforeMap		= new HashMap<String, String>();
 	private Map<String, String>			afterMap		= new HashMap<String, String>();
+	private Map<String, String>			assemblyMap		= new HashMap<String, String>();
+
+	private CacheVo						defaultCacheVo	= null;
+	private Map<String, CacheVo>		cacheVoMap		= new HashMap<String, CacheVo>();
 
 	public Map<String, String> getDomainMap() {
 		return domainMap;
@@ -40,12 +47,16 @@ public class BuilderContext {
 		return controllerMap;
 	}
 
-	public List<BeforeAfterVo> getBeforeList() {
+	public List<InterceptVo> getBeforeList() {
 		return beforeList;
 	}
 
-	public List<BeforeAfterVo> getAfterList() {
+	public List<InterceptVo> getAfterList() {
 		return afterList;
+	}
+
+	public List<InterceptVo> getAssemblyList() {
+		return assemblyList;
 	}
 
 	public Map<String, String> getBeforeMap() {
@@ -56,8 +67,24 @@ public class BuilderContext {
 		return afterMap;
 	}
 
+	public Map<String, String> getAssemblyMap() {
+		return assemblyMap;
+	}
+
 	public Map<String, MethodObject> getMoMap() {
 		return moMap;
+	}
+
+	public CacheVo getDefaultCacheVo() {
+		return defaultCacheVo;
+	}
+
+	public Map<String, CacheVo> getCacheVoMap() {
+		return cacheVoMap;
+	}
+
+	public void setDefaultCacheVo(CacheVo defaultCacheVo) {
+		this.defaultCacheVo = defaultCacheVo;
 	}
 
 	public void clear() {
@@ -69,6 +96,7 @@ public class BuilderContext {
 		this.afterList.clear();
 		this.beforeMap.clear();
 		this.afterMap.clear();
+		this.assemblyList.clear();
 
 		this.domainMap = null;
 		this.beanIdMap = null;
@@ -78,7 +106,11 @@ public class BuilderContext {
 		this.afterList = null;
 		this.beforeMap = null;
 		this.afterMap = null;
+		this.assemblyMap = null;
 
 		this.controllerMap = null;
+
+		this.defaultCacheVo = null;
+		this.cacheVoMap = null;
 	}
 }

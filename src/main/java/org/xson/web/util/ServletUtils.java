@@ -17,7 +17,10 @@ public class ServletUtils {
 	public static String parseRequestURI(HttpServletRequest request) {
 		String uri = request.getRequestURI();
 		int pos = uri.lastIndexOf(".");
-		return uri.substring(0, pos);
+		if (pos > -1) {
+			return uri.substring(0, pos);
+		}
+		return uri;
 	}
 
 	public static boolean isAjax(HttpServletRequest request, DataFormatEnum dataFormat) {
@@ -53,7 +56,10 @@ public class ServletUtils {
 	public static Object parseArgFromRequest(HttpServletRequest request, RequestContext context, String validateId) throws Exception {
 		if (DataFormatEnum.XCO == context.getDataFormat()) {
 			byte[] buffer = IOUtils.toByteArray(request.getInputStream());
-			return XCO.fromXML(new String(buffer, "UTF-8"));
+			String xml = new String(buffer, "UTF-8");
+			xml = java.net.URLDecoder.decode(xml, "UTF-8");
+			// System.out.println(xml);
+			return XCO.fromXML(xml);
 		} else if (DataFormatEnum.JSON == context.getDataFormat()) {
 			byte[] buffer = IOUtils.toByteArray(request.getInputStream());
 			return JSON.parse(new String(buffer, "UTF-8"));

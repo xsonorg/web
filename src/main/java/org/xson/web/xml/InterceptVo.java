@@ -1,27 +1,34 @@
-package org.xson.web;
+package org.xson.web.xml;
 
 import java.util.List;
 
 import org.xson.web.util.PatternMatchUtils;
 
 /**
- * 前置、后置处理器VO
+ * 前置、后置、数据组装处理器VO
  */
-public class BeforeAfterVo implements Comparable<BeforeAfterVo> {
+public class InterceptVo implements Comparable<InterceptVo> {
+
+	/**
+	 * 拦截节点类型
+	 */
+	public enum InterceptType {
+		ASSEMBLY, BEFORE, AFTER
+	}
 
 	private MethodObject	mo;
 	private int				order;
 	private List<String>	includeList;
 	private List<String>	excludeList;
 
-	public BeforeAfterVo(MethodObject mo, int order, List<String> includeList, List<String> excludeList) {
+	public InterceptVo(MethodObject mo, int order, List<String> includeList, List<String> excludeList) {
 		this.mo = mo;
 		this.order = order;
 		this.includeList = includeList;
 		this.excludeList = excludeList;
 	}
 
-	public BeforeAfterVo(MethodObject mo, int order) {
+	public InterceptVo(MethodObject mo, int order) {
 		this.mo = mo;
 		this.order = order;
 	}
@@ -49,7 +56,7 @@ public class BeforeAfterVo implements Comparable<BeforeAfterVo> {
 	}
 
 	@Override
-	public int compareTo(BeforeAfterVo o) {
+	public int compareTo(InterceptVo o) {
 		if (this.order > o.order) {
 			return 1;
 		} else if (this.order < o.order) {

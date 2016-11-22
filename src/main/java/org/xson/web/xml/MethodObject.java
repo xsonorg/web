@@ -1,4 +1,4 @@
-package org.xson.web;
+package org.xson.web.xml;
 
 import java.lang.reflect.Method;
 

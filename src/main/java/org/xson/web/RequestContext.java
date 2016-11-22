@@ -1,5 +1,8 @@
 package org.xson.web;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -18,32 +21,35 @@ public class RequestContext {
 		XCO, JSON, KV, FILE
 	}
 
-	HttpServletRequest		request;
+	HttpServletRequest			request;
 
-	HttpServletResponse		response;
+	HttpServletResponse			response;
 
-	private String			url;
+	private String				url;
 
-	private String			view;
+	private String				view;
 
-	private boolean			forward;
+	private boolean				forward;
 
-	private String			contextType;
+	private String				contextType;
 
-	private RequestTypeEnum	requestType;
+	private RequestTypeEnum		requestType;
 	// 是否是异步请求
-	private boolean			ajax;
+	private boolean				ajax;
 
-	private Object			result;
+	private Object				result;
 
-	private Object			arg;
+	private Object				arg;
 
-	private DataFormatEnum	dataFormat;
+	private DataFormatEnum		dataFormat;
 
 	// 是否存在上下文
-	private boolean			inThread;
-	private int				code	= 0;
-	private String			message;
+	private boolean				inThread;
+	private int					code	= 0;
+	private String				message;
+
+	// 附加对象
+	private Map<String, Object>	attach	= null;
 
 	public RequestContext(HttpServletRequest request, HttpServletResponse response) {
 		this(request, response, true);
@@ -53,7 +59,6 @@ public class RequestContext {
 		this.request = request;
 		this.response = response;
 		this.inThread = inThread;
-		System.out.println("-----------------------------------------------");// TODO
 		ServletUtils.printHttpHeader(request);// TODO
 		this.url = ServletUtils.parseRequestURI(request);
 		this.contextType = request.getContentType();// may be is null
@@ -99,7 +104,7 @@ public class RequestContext {
 		return ajax;
 	}
 
-	public void setRequestType(RequestTypeEnum requestType) {
+	protected void setRequestType(RequestTypeEnum requestType) {
 		this.requestType = requestType;
 	}
 
@@ -150,6 +155,13 @@ public class RequestContext {
 
 	public boolean isInThread() {
 		return inThread;
+	}
+
+	public Map<String, Object> getAttach() {
+		if (null == attach) {
+			attach = new HashMap<String, Object>();
+		}
+		return attach;
 	}
 
 	@Override

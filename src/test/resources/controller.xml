@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-controller xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://xson.org/schema/web/webcontroller.xsd">
+
+	<bean id="my" class="test.xson.web.MyHandler" />
+
+	<before call="{my}.before0" order="0">
+		<include>/product/queryBenchListByProductId</include>
+		<include>/product/queryBenchListByProductId</include>
+		<include>/product/queryBenchListByProductId</include>
+		<exclude></exclude>
+	</before>
+
+ 	<after call="{my}.after0" order="0">
+		<include>/a/*</include>
+		<exclue></exclue>
+	</after>
+	
+	<!-- 数据组装 -->
+	<assembly call="{my}.assembly0" order="0">
+		<include>/a/b</include>
+		<exclue></exclue>
+	</assembly>
+
+ 	<c url="/a/b" transfer="{service}/@" permission="A" cache="xxx"/>
+	<c url="/a/c" transfer="{service}/@" cacheUse="id:cache2; key:yyy.z.${url}.xxx; time:1"/>
+	<c url="/a/c" transfer="{service}/@" cache="id:cache2; key:yyy.z.${url}.xxx; time:1"/>
+	<c url="/a/d" validate="@" transfer="{service}/@"/>
+	<c url="/a/e" exec="{my}.exec1" />
+	<c url="/a/f" validate="@" exec="{my}.exec2" />
+	<c url="/a/g" validate="a.b" transfer="{service}/@" exec="{my}.exec1" />
+	<c url="/a/h" validate="@" transfer="{service}/@" exec="{my}.exec2">
+		<assembly call="{my}.assembly1" order="0" />
+		<before call="{my}.before1" order="0" />
+		<after call="{my}.after1" order="0" />
+	</c>
+	
+</web-controller>

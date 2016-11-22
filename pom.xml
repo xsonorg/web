@@ -3,22 +3,78 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.xson</groupId>
-	<artifactId>xco-web</artifactId>
-	<version>1.0.0</version>
+	<artifactId>xco-web1</artifactId>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
-	<name>xco-web</name>
+	<name>xco-web1</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+	<distributionManagement>
+		<repository>
+			<id>haorizi.releases.http</id>
+			<name>Nexus Release Repository</name>
+			<url>http://192.168.2.125/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>haorizi.snapshots.http</id>
+			<name>Nexus Snapshot Repository</name>
+			<url>http://192.168.2.125/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<dependencies>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sf.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>2.10.1</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.whalin</groupId>
+			<artifactId>Memcached-Java-Client</artifactId>
+			<version>3.0.2</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.xson</groupId>
+			<artifactId>xson-redis</artifactId>
+			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.16</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.16</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -37,21 +93,25 @@
 		<dependency>
 			<groupId>org.xson</groupId>
 			<artifactId>common-object</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
-<!-- 
 		<dependency>
 			<groupId>cn.gatherlife</groupId>
 			<artifactId>rpc-util</artifactId>
-			<version>1.0</version>
+			<version>1.0.0</version>
 		</dependency>
- -->
- 
+
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.3.1</version>
 		</dependency>
 
 		<dependency>
@@ -60,6 +120,7 @@
 			<version>1.2.7</version>
 			<scope>provided</scope>
 		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -77,4 +138,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
