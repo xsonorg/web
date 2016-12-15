@@ -4,10 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.xson.common.object.XCO;
+import org.xson.rpc.RpcClient;
 import org.xson.web.RequestContext;
 import org.xson.web.cache.vo.CacheUseVo;
-
-import cn.gatherlife.rpc.RpcClient;
 
 public class ControllerVo {
 
@@ -101,6 +100,7 @@ public class ControllerVo {
 			if (null != this.execMethod) {
 				this.execMethod.getMethod().invoke(this.execMethod.getInstance(), context);
 			} else {
+				// TODO: 要兼容local sever
 				XCO request = (XCO) context.getArg();
 				if (null == request) {
 					request = new XCO();

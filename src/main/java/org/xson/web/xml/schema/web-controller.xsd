@@ -27,7 +27,7 @@
 			<xs:sequence>
 				<xs:choice maxOccurs="unbounded">
 					<xs:element name="include"/>
-					<xs:element name="exclue"/>
+					<xs:element name="exclude"/>
 				</xs:choice>
 			</xs:sequence>
 			<xs:attribute name="call" type="xs:string" use="required"/>
@@ -39,7 +39,7 @@
 			<xs:sequence>
 				<xs:choice maxOccurs="unbounded">
 					<xs:element name="include"/>
-					<xs:element name="exclue"/>
+					<xs:element name="exclude"/>
 				</xs:choice>
 			</xs:sequence>
 			<xs:attribute name="call" type="xs:string" use="required"/>
@@ -51,7 +51,7 @@
 			<xs:sequence>
 				<xs:choice maxOccurs="unbounded">
 					<xs:element name="include"/>
-					<xs:element name="exclue"/>
+					<xs:element name="exclude"/>
 				</xs:choice>
 			</xs:sequence>
 			<xs:attribute name="call" type="xs:string" use="required"/>

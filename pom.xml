@@ -99,27 +99,24 @@
 		</dependency>
 
 		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.16</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.xson</groupId>
 			<artifactId>xco-validate</artifactId>
 			<version>1.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.xson</groupId>
 			<artifactId>common-object</artifactId>
 			<version>1.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>cn.gatherlife</groupId>
-			<artifactId>rpc-util</artifactId>
-			<version>1.0.0</version>
+			<groupId>org.xson</groupId>
+			<artifactId>tangyuan</artifactId>
+			<version>1.1.0</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
