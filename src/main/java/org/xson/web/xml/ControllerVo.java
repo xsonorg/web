@@ -83,7 +83,7 @@ public class ControllerVo {
 	public void after(RequestContext context) throws Throwable {
 		try {
 			if (null != this.afterMethods) {
-				for (MethodObject mo : this.beforeMethods) {
+				for (MethodObject mo : this.afterMethods) {
 					mo.getMethod().invoke(mo.getInstance(), context);
 				}
 			}
