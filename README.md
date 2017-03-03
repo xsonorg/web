@@ -25,5 +25,4 @@ xco-web is an easy to use control layer framework, is part of the SOA system, us
 
 	<c url="abc" transfer="abc"/>
 	<c url="abc" />
-	------------------------------------
 	<c />
