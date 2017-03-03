@@ -5,18 +5,31 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
+import org.xson.tangyuan.TangYuanContainer;
 
 public class XcoWebContextLoaderListener implements ServletContextListener {
 
-	private Logger	log	= Logger.getLogger(XcoWebContextLoaderListener.class);
+	private Logger	log			= Logger.getLogger(XcoWebContextLoaderListener.class);
+
+	private boolean	tangyuan	= false;
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
 		ServletContext context = sce.getServletContext();
 		try {
+			// load tangyuan
+			String tangyuanResource = context.getInitParameter("tangyuan.resource");
+			if (null != tangyuanResource) {
+				TangYuanContainer.getInstance().start(tangyuanResource);
+				tangyuan = true;
+				Container.getInstance().setIntegratedTangYuanFramework(true);
+				log.info("tangyuan init success!!!");
+			}
+
 			// load controller config
 			String webFrameworkResource = context.getInitParameter("web-framework.resource");
 			org.xson.web.Container.getInstance().init(webFrameworkResource);
+
 			// load validate
 			String dateValidateResource = context.getInitParameter("date-validate.resource");
 			if (null != dateValidateResource) {
@@ -24,9 +37,9 @@ public class XcoWebContextLoaderListener implements ServletContextListener {
 				// fix bug
 				Container.getInstance().setIntegratedValidationFramework(true);
 			}
-			System.out.println("web success!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		} catch (Exception e) {
-			// log.error("web framework failed to initialize", e);
+
+			log.info("web success!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		} catch (Throwable e) {
 			log.error("web framework failed to initialize");
 			throw new RuntimeException(e);
 		}
@@ -34,9 +47,17 @@ public class XcoWebContextLoaderListener implements ServletContextListener {
 
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
+		if (tangyuan) {
+			try {
+				TangYuanContainer.getInstance().stop();
+				log.info("tangyuan close ...");
+			} catch (Throwable e) {
+				log.error("tangyuan close error.", e);
+			}
+		}
 		try {
 			org.xson.web.Container.getInstance().stop();
-			System.out.println("web close......");
+			log.info("web close......");
 		} catch (Throwable e) {
 			log.error(e);
 		}

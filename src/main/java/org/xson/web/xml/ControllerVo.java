@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.xson.common.object.XCO;
 import org.xson.rpc.RpcClient;
+import org.xson.rpc.RpcLocal;
+import org.xson.web.Container;
 import org.xson.web.RequestContext;
 import org.xson.web.cache.vo.CacheUseVo;
 
@@ -100,13 +102,23 @@ public class ControllerVo {
 			if (null != this.execMethod) {
 				this.execMethod.getMethod().invoke(this.execMethod.getInstance(), context);
 			} else {
-				// TODO: 要兼容local sever
 				XCO request = (XCO) context.getArg();
 				if (null == request) {
 					request = new XCO();
 				}
-				XCO result = RpcClient.call(transfer, request);
+				XCO result = null;
+				if (Container.getInstance().isRemoteServiceMode()) {
+					result = RpcClient.call(transfer, request);
+				} else {
+					result = RpcLocal.call(transfer, request);
+				}
 				context.setResult(result);
+				// XCO request = (XCO) context.getArg();
+				// if (null == request) {
+				// request = new XCO();
+				// }
+				// XCO result = RpcClient.call(transfer, request);
+				// context.setResult(result);
 			}
 		} catch (Throwable e) {
 			if (e instanceof InvocationTargetException) {

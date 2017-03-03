@@ -35,7 +35,11 @@ public class XMLConfigBuilder {
 			setDefaultCache();
 			startCache();
 
-			buildPluginNodes(this.root.evalNodes("plugin"));
+			if (Container.getInstance().isMappingServiceName()) {
+				buildPluginNodesWithAutoMappingMode(this.root.evalNodes("plugin"));
+			} else {
+				buildPluginNodes(this.root.evalNodes("plugin"));
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -186,4 +190,37 @@ public class XMLConfigBuilder {
 		Container.getInstance().setCacheVoMap(this.bc.getCacheVoMap());
 		this.bc.clear();
 	}
+
+	/** 解析插件, 自动映射模式下 */
+	private void buildPluginNodesWithAutoMappingMode(List<XmlNodeWrapper> contexts) throws Exception {
+		List<String> resourceList = new ArrayList<String>();
+		for (XmlNodeWrapper context : contexts) {
+			String resource = StringUtils.trim(context.getStringAttribute("resource"));
+			if (null != resource) {
+				resourceList.add(resource);
+			}
+		}
+
+		XMLPluginBuilder builder = null;
+		for (String resource : resourceList) {
+			logger.info("Start parsing: " + resource);
+			InputStream inputStream = Container.getInstance().getResourceAsStream(null, resource);
+			builder = new XMLPluginBuilder(inputStream, this.bc);
+			builder.parseBeanNode();
+			builder.parseInterceptNode();
+		}
+
+		if (null == builder) {
+			builder = new XMLPluginBuilder(this.bc);
+		}
+
+		logger.info("Start url auto mapping......");
+		builder.parseControllerNodeAutoMapping();
+
+		// 最后收尾
+		Container.getInstance().setControllerMap(this.bc.getControllerMap());
+		Container.getInstance().setCacheVoMap(this.bc.getCacheVoMap());
+		this.bc.clear();
+	}
+
 }

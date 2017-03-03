@@ -4,7 +4,7 @@
 
 	<groupId>org.xson</groupId>
 	<artifactId>xco-web</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>xco-web</name>
@@ -192,7 +192,8 @@
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
-						<phase>package</phase>
+						<!-- <phase>package</phase> -->
+						<phase>deploy</phase>
 						<goals>
 							<goal>jar</goal>
 						</goals>

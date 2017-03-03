@@ -7,10 +7,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.xson.tangyuan.TangYuanContainer;
 import org.xson.web.Container;
 import org.xson.web.RequestContext;
 import org.xson.web.XcoWebException;
@@ -31,6 +33,10 @@ public class XMLPluginBuilder {
 	private String			urlSeparator	= "/";
 	private String			leftBrackets	= "{";
 	private String			rightBrackets	= "}";
+
+	public XMLPluginBuilder(BuilderContext bc) {
+		this.bc = bc;
+	}
 
 	public XMLPluginBuilder(InputStream inputStream, BuilderContext bc) {
 		this.bc = bc;
@@ -58,7 +64,19 @@ public class XMLPluginBuilder {
 
 	public void parseControllerNode() {
 		try {
-			buildControllerNode(this.root.evalNodes("c"));
+			if (Container.getInstance().isRemoteServiceMode()) {
+				buildControllerNode(this.root.evalNodes("c"));
+			} else {
+				buildControllerNodeWithLocalMode(this.root.evalNodes("c"));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void parseControllerNodeAutoMapping() {
+		try {
+			buildControllerNodeAutoMapping();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -153,6 +171,125 @@ public class XMLPluginBuilder {
 				this.bc.getAfterMap().put(call, call);
 			}
 
+		}
+	}
+
+	/** 解析控制器,自动映射模式 */
+	private void buildControllerNodeAutoMapping() throws Exception {
+		Set<String> serviceKeys = TangYuanContainer.getInstance().getServicesKeySet();
+		for (String key : serviceKeys) {
+			String url = serviceNameToUrl(key);
+			if (this.bc.getControllerMap().containsKey(url)) {
+				throw new RuntimeException("Duplicate URL: " + url);
+			}
+
+			String transfer = key;
+			String validate = null;
+			MethodObject execMethod = null;
+			String permission = null;
+			CacheUseVo cacheUse = null;
+
+			List<InterceptVo> assemblyList = new ArrayList<InterceptVo>();
+			List<InterceptVo> beforeList = new ArrayList<InterceptVo>();
+			List<InterceptVo> afterList = new ArrayList<InterceptVo>();
+
+			ControllerVo cVo = new ControllerVo(url, transfer, validate, execMethod, getInterceptList(url, assemblyList, InterceptType.ASSEMBLY),
+					getInterceptList(url, beforeList, InterceptType.BEFORE), getInterceptList(url, afterList, InterceptType.AFTER), permission,
+					cacheUse);
+
+			this.bc.getControllerMap().put(cVo.getUrl(), cVo);
+			logger.info("Add auto <c> :" + cVo.getUrl());
+		}
+	}
+
+	/** 解析控制器,本地服务模式 */
+	private void buildControllerNodeWithLocalMode(List<XmlNodeWrapper> contexts) throws Exception {
+		for (XmlNodeWrapper context : contexts) {
+			String url = StringUtils.trim(context.getStringAttribute("url"));
+			if (this.bc.getControllerMap().containsKey(url)) {
+				throw new RuntimeException("Duplicate URL: " + url);
+			}
+			// TODO url check null
+
+			String validate = StringUtils.trim(context.getStringAttribute("validate"));
+			if (null != validate) {
+				validate = parseValidate(validate, url);
+			}
+
+			String exec = StringUtils.trim(context.getStringAttribute("exec"));
+			MethodObject execMethod = null;
+			if (null != exec) {
+				execMethod = getMethodObject(exec);
+			}
+
+			String transfer = StringUtils.trim(context.getStringAttribute("transfer"));
+			if (null == transfer && null == execMethod) {
+				transfer = url;
+			}
+
+			transfer = urlToServiceName(transfer);
+
+			// 权限
+			String permission = StringUtils.trim(context.getStringAttribute("permission"));
+
+			// 缓存
+			String _cacheUse = StringUtils.trim(context.getStringAttribute("cache"));
+			CacheUseVo cacheUse = null;
+			if (null != _cacheUse && _cacheUse.length() > 0) {
+				cacheUse = parseCacheUse(_cacheUse, url);
+			}
+
+			// 私有的assembly
+			List<InterceptVo> assemblyList = new ArrayList<InterceptVo>();
+			List<XmlNodeWrapper> assemblyNodes = context.evalNodes("assembly");
+			for (XmlNodeWrapper node : assemblyNodes) {
+				String call = StringUtils.trim(node.getStringAttribute("call"));
+				String _order = StringUtils.trim(node.getStringAttribute("order"));
+				MethodObject mo = getMethodObject(call);
+				int order = Container.getInstance().getOrder();
+				if (null != _order) {
+					order = Integer.parseInt(_order);
+				}
+				InterceptVo baVo = new InterceptVo(mo, order);
+				assemblyList.add(baVo);
+			}
+
+			// 私有的before
+			List<InterceptVo> beforeList = new ArrayList<InterceptVo>();
+			List<XmlNodeWrapper> beforeNodes = context.evalNodes("before");
+			for (XmlNodeWrapper node : beforeNodes) {
+				String call = StringUtils.trim(node.getStringAttribute("call"));
+				String _order = StringUtils.trim(node.getStringAttribute("order"));
+				MethodObject mo = getMethodObject(call);
+				int order = Container.getInstance().getOrder();
+				if (null != _order) {
+					order = Integer.parseInt(_order);
+				}
+				InterceptVo baVo = new InterceptVo(mo, order);
+				beforeList.add(baVo);
+			}
+
+			// 私有的after
+			List<InterceptVo> afterList = new ArrayList<InterceptVo>();
+			List<XmlNodeWrapper> afterNodes = context.evalNodes("after");
+			for (XmlNodeWrapper node : afterNodes) {
+				String call = StringUtils.trim(node.getStringAttribute("call"));
+				String _order = StringUtils.trim(node.getStringAttribute("order"));
+				MethodObject mo = getMethodObject(call);
+				int order = Container.getInstance().getOrder();
+				if (null != _order) {
+					order = Integer.parseInt(_order);
+				}
+				InterceptVo baVo = new InterceptVo(mo, order);
+				afterList.add(baVo);
+			}
+
+			ControllerVo cVo = new ControllerVo(url, transfer, validate, execMethod, getInterceptList(url, assemblyList, InterceptType.ASSEMBLY),
+					getInterceptList(url, beforeList, InterceptType.BEFORE), getInterceptList(url, afterList, InterceptType.AFTER), permission,
+					cacheUse);
+
+			this.bc.getControllerMap().put(cVo.getUrl(), cVo);
+			logger.info("Add <c> :" + cVo.getUrl());
 		}
 	}
 
@@ -441,6 +578,28 @@ public class XMLPluginBuilder {
 			cacheUseVo = new CacheUseVo(cacheVo, key, time, ignore, url);
 		}
 		return cacheUseVo;
+	}
+
+	/** URL到本地服务名 */
+	private String urlToServiceName(String url) {
+		// <c url="/sos-project/getMyProjectP10" transfer="{service}/sos-project/getMyProjectP10" />
+		if (null == url) {
+			return null;
+		}
+		if (url.startsWith(urlSeparator)) {
+			url = url.substring(1);
+		}
+		if (url.endsWith(urlSeparator)) {
+			url = url.substring(0, url.length() - 1);
+		}
+		return url.replaceAll("/", ".");
+	}
+
+	private String serviceNameToUrl(String serviceName) {
+		if (!serviceName.startsWith(urlSeparator)) {
+			serviceName = urlSeparator + serviceName;
+		}
+		return serviceName.replaceAll("\\.", "/");
 	}
 
 }

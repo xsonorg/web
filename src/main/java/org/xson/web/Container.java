@@ -13,12 +13,12 @@ import org.xson.web.xml.XMLConfigBuilder;
 
 public class Container {
 
-	private Logger	logger	= Logger.getLogger(Container.class);
+	private Logger logger = Logger.getLogger(Container.class);
 
 	private Container() {
 	}
 
-	private static Container	instance	= new Container();
+	private static Container instance = new Container();
 
 	public static Container getInstance() {
 		return instance;
@@ -36,13 +36,23 @@ public class Container {
 	private String						errorRedirectPage				= "/404.html";
 	private int							order							= 10;
 
-	// 是否集成验证框架
+	/** 远程服务模式|本地服务模式 */
+	// private boolean remoteServiceMode = true;
+	private boolean						localServiceMode				= false;
+
+	/** URL默认映射模式 */
+	private boolean						urlAutoMappingMode				= false;
+
+	/** 是否集成TangYuan框架 */
+	private boolean						integratedTangYuanFramework		= false;
+
+	/** 是否集成验证框架 */
 	private boolean						integratedValidationFramework	= false;
 
-	// 异步线程
+	/** 异步线程 */
 	private AsyncTaskThread				asyncTaskThread					= null;
 
-	// 缓存容器集合
+	/** 缓存容器集合 */
 	private Map<String, CacheVo>		cacheVoMap						= null;
 
 	private boolean						initialization					= false;
@@ -134,6 +144,22 @@ public class Container {
 			this.errorRedirectPage = properties.get("errorRedirectPage".toUpperCase());
 		}
 
+		// if (properties.containsKey("remoteServiceMode".toUpperCase())) {
+		// this.remoteServiceMode = Boolean.parseBoolean(properties.get("remoteServiceMode".toUpperCase()));
+		// }
+
+		if (properties.containsKey("localServiceMode".toUpperCase())) {
+			this.localServiceMode = Boolean.parseBoolean(properties.get("localServiceMode".toUpperCase()));
+		}
+
+		if (properties.containsKey("urlAutoMappingMode".toUpperCase())) {
+			this.urlAutoMappingMode = Boolean.parseBoolean(properties.get("urlAutoMappingMode".toUpperCase()));
+		}
+
+		if (localServiceMode && !integratedTangYuanFramework) {
+			throw new XcoWebException("The local service mode requires tangyuan framework support");
+		}
+
 		logger.info("config setting success, version: " + Version.getVersion());
 	}
 
@@ -169,12 +195,32 @@ public class Container {
 		return order;
 	}
 
+	public boolean isRemoteServiceMode() {
+		return !localServiceMode;
+	}
+
+	// public boolean isUrlDefaultMappingMode() {
+	// return urlDefaultMappingMode;
+	// }
+
+	/** 是否映射服务名 */
+	public boolean isMappingServiceName() {
+		if (urlAutoMappingMode && localServiceMode) {
+			return true;
+		}
+		return false;
+	}
+
 	public boolean isIntegratedValidationFramework() {
 		return integratedValidationFramework;
 	}
 
 	public void setIntegratedValidationFramework(boolean integratedValidationFramework) {
 		this.integratedValidationFramework = integratedValidationFramework;
+	}
+
+	public void setIntegratedTangYuanFramework(boolean integratedTangYuanFramework) {
+		this.integratedTangYuanFramework = integratedTangYuanFramework;
 	}
 
 	public void addAsyncTask(AsyncTask task) {
