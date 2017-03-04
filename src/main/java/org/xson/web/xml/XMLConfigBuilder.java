@@ -36,7 +36,8 @@ public class XMLConfigBuilder {
 			startCache();
 
 			if (Container.getInstance().isMappingServiceName()) {
-				buildPluginNodesWithAutoMappingMode(this.root.evalNodes("plugin"));
+				// buildPluginNodesWithAutoMappingMode(this.root.evalNodes("plugin"));
+				buildPluginNodesWithMixMode(this.root.evalNodes("plugin"));
 			} else {
 				buildPluginNodes(this.root.evalNodes("plugin"));
 			}
@@ -192,7 +193,7 @@ public class XMLConfigBuilder {
 	}
 
 	/** 解析插件, 自动映射模式下 */
-	private void buildPluginNodesWithAutoMappingMode(List<XmlNodeWrapper> contexts) throws Exception {
+	protected void buildPluginNodesWithAutoMappingMode(List<XmlNodeWrapper> contexts) throws Exception {
 		List<String> resourceList = new ArrayList<String>();
 		for (XmlNodeWrapper context : contexts) {
 			String resource = StringUtils.trim(context.getStringAttribute("resource"));
@@ -211,6 +212,43 @@ public class XMLConfigBuilder {
 		}
 
 		if (null == builder) {
+			builder = new XMLPluginBuilder(this.bc);
+		}
+
+		logger.info("Start url auto mapping......");
+		builder.parseControllerNodeAutoMapping();
+
+		// 最后收尾
+		Container.getInstance().setControllerMap(this.bc.getControllerMap());
+		Container.getInstance().setCacheVoMap(this.bc.getCacheVoMap());
+		this.bc.clear();
+	}
+
+	/** 解析插件, 自动映射模式+混合模式 */
+	private void buildPluginNodesWithMixMode(List<XmlNodeWrapper> contexts) throws Exception {
+		List<String> resourceList = new ArrayList<String>();
+		for (XmlNodeWrapper context : contexts) {
+			String resource = StringUtils.trim(context.getStringAttribute("resource"));
+			if (null != resource) {
+				resourceList.add(resource);
+			}
+		}
+
+		int i = -1;
+		XMLPluginBuilder[] builders = new XMLPluginBuilder[resourceList.size()];
+		for (String resource : resourceList) {
+			logger.info("Start parsing: " + resource);
+			i++;
+			InputStream inputStream = Container.getInstance().getResourceAsStream(null, resource);
+			builders[i] = new XMLPluginBuilder(inputStream, this.bc);
+			builders[i].parseBeanNode();
+			builders[i].parseInterceptNode();
+		}
+
+		XMLPluginBuilder builder = null;
+		if (i > -1) {
+			builder = builders[i];
+		} else {
 			builder = new XMLPluginBuilder(this.bc);
 		}
 
