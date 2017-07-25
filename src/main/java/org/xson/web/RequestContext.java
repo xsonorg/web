@@ -59,7 +59,7 @@ public class RequestContext {
 		this.request = request;
 		this.response = response;
 		this.inThread = inThread;
-		ServletUtils.printHttpHeader(request);// TODO
+		ServletUtils.printHttpHeader(request);
 		this.url = ServletUtils.parseRequestURI(request);
 		this.contextType = request.getContentType();// may be is null
 		this.dataFormat = ServletUtils.parseDataFormat(this.contextType);

@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.xson.common.object.XCO;
 import org.xson.common.validate.URLParameterHandler;
 import org.xson.web.RequestContext;
@@ -13,6 +14,8 @@ import org.xson.web.RequestContext.DataFormatEnum;
 import com.alibaba.fastjson.JSON;
 
 public class ServletUtils {
+
+	private static Logger log = Logger.getLogger(ServletUtils.class);
 
 	public static String parseRequestURI(HttpServletRequest request) {
 		String uri = request.getRequestURI();
@@ -77,7 +80,7 @@ public class ServletUtils {
 		while (headerNames.hasMoreElements()) {
 			String key = (String) headerNames.nextElement();
 			String value = request.getHeader(key);
-			System.out.println(key + ":" + value);
+			log.debug(key + ":" + value);
 		}
 	}
 
